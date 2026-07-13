@@ -71,6 +71,19 @@ const MONTH_OPTIONS = [
   { value: 12, label: "Desember" },
 ];
 
+const CATEGORY_COLOR_OPTIONS = [
+  { label: "Slate", value: "bg-slate-200" },
+  { label: "Red", value: "bg-red-200" },
+  { label: "Green", value: "bg-green-200" },
+  { label: "Blue", value: "bg-blue-200" },
+  { label: "Yellow", value: "bg-yellow-200" },
+  { label: "Purple", value: "bg-purple-200" },
+  { label: "Orange", value: "bg-orange-200" },
+  { label: "Pink", value: "bg-pink-200" },
+];
+
+const CATEGORY_ICON_OPTIONS = ["💼", "💻", "🧾", "🍔", "🚗", "🏠", "🛒", "🎁", "📚", "🏥", "🎮", "✨"];
+
 const TODAY = new Date();
 const CURRENT_MONTH = TODAY.getMonth() + 1;
 const CURRENT_YEAR = TODAY.getFullYear();
@@ -217,6 +230,19 @@ export default function FinanceApp() {
 
     saveCategories(categories);
   }, [isLoaded, categories]);
+
+  useEffect(() => {
+    if (!modalMode) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [modalMode]);
 
   function closeModal() {
     setModalMode(null);
@@ -1234,8 +1260,8 @@ export default function FinanceApp() {
 
         {modalMode && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6 backdrop-blur-sm">
-            <div className="w-full max-w-3xl rounded-[28px] bg-white p-6 shadow-2xl transition-all duration-300">
-              <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-[28px] bg-white p-6 shadow-2xl transition-all duration-300">
+              <div className="mb-6 flex shrink-0 items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-500">
                     {modalMode === "wallet"
@@ -1267,8 +1293,9 @@ export default function FinanceApp() {
                 </button>
               </div>
 
-              {modalMode === "wallet" ? (
-                <form onSubmit={saveWallet} className="space-y-4">
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {modalMode === "wallet" ? (
+                  <form onSubmit={saveWallet} className="space-y-4">
                   <label className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">Nama Wallet</span>
                     <input
@@ -1322,10 +1349,10 @@ export default function FinanceApp() {
                       Batal
                     </button>
                   </div>
-                </form>
-              ) : modalMode === "category" ? (
-                <>
-                  <form onSubmit={saveCategory} className="space-y-4">
+                  </form>
+                ) : modalMode === "category" ? (
+                  <>
+                    <form onSubmit={saveCategory} className="space-y-4">
                     <label className="block">
                       <span className="mb-2 block text-sm font-medium text-slate-700">Nama Kategori</span>
                       <input
@@ -1348,23 +1375,50 @@ export default function FinanceApp() {
                           <option value="expense">Pengeluaran</option>
                         </select>
                       </label>
-                      <label className="block">
+                      <div className="block">
                         <span className="mb-2 block text-sm font-medium text-slate-700">Icon</span>
-                        <input
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-500 focus:bg-white"
-                          value={categoryForm.icon}
-                          onChange={(event) => setCategoryForm((current) => ({ ...current, icon: event.target.value }))}
-                        />
-                      </label>
+                        <div className="flex flex-wrap gap-2">
+                          {CATEGORY_ICON_OPTIONS.map((iconOption) => {
+                            const isSelected = categoryForm.icon === iconOption;
+
+                            return (
+                              <button
+                                key={iconOption}
+                                type="button"
+                                onClick={() => setCategoryForm((current) => ({ ...current, icon: iconOption }))}
+                                className={`flex h-11 w-11 items-center justify-center rounded-2xl border bg-slate-50 text-xl transition hover:bg-white ${
+                                  isSelected ? "border-slate-900 shadow-sm" : "border-slate-200"
+                                }`}
+                                aria-label={`Pilih icon ${iconOption}`}
+                              >
+                                {iconOption}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
-                    <label className="block">
+                    <div className="block">
                       <span className="mb-2 block text-sm font-medium text-slate-700">Warna</span>
-                      <input
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-500 focus:bg-white"
-                        value={categoryForm.color}
-                        onChange={(event) => setCategoryForm((current) => ({ ...current, color: event.target.value }))}
-                      />
-                    </label>
+                      <div className="flex flex-wrap gap-3">
+                        {CATEGORY_COLOR_OPTIONS.map((colorOption) => {
+                          const isSelected = categoryForm.color === colorOption.value;
+
+                          return (
+                            <button
+                              key={colorOption.value}
+                              type="button"
+                              onClick={() => setCategoryForm((current) => ({ ...current, color: colorOption.value }))}
+                              className={`h-10 w-10 rounded-full border border-slate-200 ${colorOption.value} ${
+                                isSelected ? "outline-2 outline-offset-2 outline-slate-900" : "outline-0"
+                              }`}
+                              aria-label={`Pilih warna ${colorOption.label}`}
+                              title={colorOption.label}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div className="flex flex-wrap gap-3 pt-2">
                       <button
                         type="submit"
@@ -1380,9 +1434,9 @@ export default function FinanceApp() {
                         Batal
                       </button>
                     </div>
-                  </form>
+                    </form>
 
-                  <div className="mt-8 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                    <div className="mt-8 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                     <div className="mb-4 flex items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold text-slate-700">Kategori yang sudah ada</p>
@@ -1427,9 +1481,9 @@ export default function FinanceApp() {
                       )}
                     </div>
                   </div>
-                </>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                  </>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
                   <label className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">Deskripsi</span>
                     <input
@@ -1539,8 +1593,9 @@ export default function FinanceApp() {
                       Batal
                     </button>
                   </div>
-                </form>
-              )}
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         )}
